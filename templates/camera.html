@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">카메라 모니터</h1>
+
+<div class="camera-panel">
+  <div class="camera-viewport" id="camera-viewport">
+    <p>카메라 스트림 연동 예정<br>
+      <small>eye_tracking · face_direction 모듈 연결 후 표시</small>
+    </p>
+    {# 연동 시 예: <img src="{{ url_for('video_feed') }}" alt="live"> #}
+  </div>
+  <div class="camera-meta">
+    <span>스트림: <span class="badge badge--idle" id="stream-badge">대기</span></span>
+    <span>시선: <strong id="gaze-status">—</strong></span>
+    <span>얼굴 방향: <strong id="face-direction">—</strong></span>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">집중도 대시보드</h1>
+
+<section class="status-banner" id="status-banner" data-focused="true">
+  <span class="status-banner__dot" id="status-dot"></span>
+  <div>
+    <p class="status-banner__label">현재 상태</p>
+    <p class="status-banner__text" id="focus-state">측정 중…</p>
+  </div>
+</section>
+
+<div class="focus-bar-wrap">
+  <div class="focus-bar" id="focus-bar" style="width: 0%"></div>
+</div>
+<p class="focus-bar-caption">집중 비율 (누적 시간 기준)</p>
+
+<div class="grid">
+  <section class="card">
+    <p class="card-label">집중 점수</p>
+    <p class="card-value" id="focus-score">—</p>
+  </section>
+  <section class="card">
+    <p class="card-label">집중 시간</p>
+    <p class="card-value" id="focus-time">—</p>
+  </section>
+  <section class="card">
+    <p class="card-label">비집중 시간</p>
+    <p class="card-value" id="distract-time">—</p>
+  </section>
+  <section class="card">
+    <p class="card-label">활성 창</p>
+    <p class="card-value small" id="active-window">—</p>
+  </section>
+</div>
+
+<p class="card card--meta">
+  <span class="card-label">모니터</span>
+  <span id="monitor-running" class="badge badge--idle">—</span>
+  <span class="card-meta-sep">·</span>
+  <span id="status-message">로딩 중…</span>
+</p>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

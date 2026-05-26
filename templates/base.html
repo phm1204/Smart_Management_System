@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ page_title | default("Smart Focus") }}{% endblock %} · Smart Focus</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="layout">
+    <header class="header">
+      <a href="{{ url_for('index') }}" class="logo">Smart <span>Focus</span></a>
+      <nav class="nav">
+        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">대시보드</a>
+        <a href="{{ url_for('camera') }}" class="{% if request.endpoint == 'camera' %}active{% endif %}">카메라</a>
+      </nav>
+    </header>
+
+    <main class="main">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      Smart Focus Management System
+    </footer>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
