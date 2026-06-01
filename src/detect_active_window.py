@@ -3,6 +3,8 @@ import time
 
 import win32gui
 
+from src.monitor_base import BaseMonitor
+
 DEFAULT_DISTRACT_KEYWORDS = [
     "instagram",
     "youtube",
@@ -16,7 +18,7 @@ DEFAULT_DISTRACT_KEYWORDS = [
 ]
 
 
-class FocusMonitor:
+class FocusMonitor(BaseMonitor):
     """활성 창 제목으로 집중/비집중 시간을 측정한다."""
 
     def __init__(self, distract_keywords=None, interval_sec=1.0):
@@ -55,6 +57,14 @@ class FocusMonitor:
         if self._thread is not None:
             self._thread.join(timeout=2.0)
         self._thread = None
+
+    def reset(self):
+        with self._lock:
+            self.active_window = ""
+            self.focused = True
+            self.focus_time_sec = 0
+            self.distract_time_sec = 0
+            self.last_title = ""
 
     def get_status(self):
         with self._lock:

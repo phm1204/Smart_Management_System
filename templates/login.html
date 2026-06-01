@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 · Smart Focus</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .login-header .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--text);
+      text-decoration: none;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .login-header .logo span {
+      color: var(--accent);
+    }
+
+    .login-header p {
+      color: var(--muted);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .login-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .form-group input {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-group input::placeholder {
+      color: var(--muted);
+    }
+
+    .btn-login {
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-login:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      border-radius: 6px;
+      padding: 12px;
+      color: var(--danger);
+      font-size: 14px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-container">
+      <div class="login-header">
+        <a class="logo">Smart <span>Focus</span></a>
+        <p>집중력 관리 시스템에 로그인하세요</p>
+      </div>
+
+      <form class="login-form" method="POST">
+        <div class="form-group">
+          <label for="username">사용자명</label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            placeholder="이름을 입력하세요"
+            required
+            autofocus
+          >
+        </div>
+        <button type="submit" class="btn-login">로그인</button>
+      </form>
+
+      <p style="text-align: center; color: var(--muted); font-size: 12px; margin-top: 20px;">
+        {{ session.get('user_id') }}
+      </p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container center">
+  <h1 class="page-title">학습 매체 선택</h1>
+  <p class="page-subtitle">어떤 방식으로 공부하시나요?</p>
+
+  <form method="POST" class="learning-type-form">
+    <div class="learning-type-grid">
+      <label class="learning-type-card">
+        <input type="radio" name="learning_type" value="book" required>
+        <div class="learning-type-content">
+          <div class="learning-type-icon">📚</div>
+          <h3>책으로 공부</h3>
+          <p>오프라인 교재, 노트를 사용한 학습</p>
+        </div>
+      </label>
+
+      <label class="learning-type-card">
+        <input type="radio" name="learning_type" value="computer" checked required>
+        <div class="learning-type-content">
+          <div class="learning-type-icon">💻</div>
+          <h3>컴퓨터로 공부</h3>
+          <p>온라인 강의, 프로그래밍 등 디지털 학습</p>
+        </div>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary btn-next">공부법 선택하기</button>
+    </div>
+  </form>
+</div>
+
+<style>
+.page-container.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 2rem;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+.learning-type-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 600px;
+}
+
+.learning-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.learning-type-card {
+  cursor: pointer;
+}
+
+.learning-type-card input[type="radio"] {
+  display: none;
+}
+
+.learning-type-card .learning-type-content {
+  padding: 1.5rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: var(--surface);
+}
+
+.learning-type-card input[type="radio"]:checked + .learning-type-content {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.learning-type-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.learning-type-content h3 {
+  margin: 0.5rem 0 0.3rem;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.learning-type-content p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.form-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-next {
+  min-width: 160px;
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.btn-next:hover {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+@media (max-width: 600px) {
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-next {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .learning-type-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}

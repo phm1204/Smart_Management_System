@@ -11,10 +11,17 @@
   <div class="layout">
     <header class="header">
       <a href="{{ url_for('index') }}" class="logo">Smart <span>Focus</span></a>
-      <nav class="nav">
-        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">대시보드</a>
-        <a href="{{ url_for('camera') }}" class="{% if request.endpoint == 'camera' %}active{% endif %}">카메라</a>
-      </nav>
+      <div class="header-right">
+        <div class="user-menu" id="user-menu">
+          <button type="button" class="user-display" id="user-menu-toggle" aria-expanded="false">
+            {{ session.get('user_id', '사용자') }}
+          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <a href="{{ url_for('camera') }}">카메라 연결</a>
+            <a href="{{ url_for('logout') }}">로그아웃</a>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main class="main">
@@ -26,6 +33,26 @@
     </footer>
   </div>
 
+  <script>
+    (function () {
+      const menu = document.getElementById("user-menu");
+      const toggle = document.getElementById("user-menu-toggle");
+      const dropdown = document.getElementById("user-dropdown");
+      if (!menu || !toggle || !dropdown) return;
+
+      toggle.addEventListener("click", function () {
+        const isOpen = menu.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!menu.contains(event.target)) {
+          menu.classList.remove("open");
+          toggle.setAttribute("aria-expanded", "false");
+        }
+      });
+    })();
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

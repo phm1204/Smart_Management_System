@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <style>
+    .study-method-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 220px);
+      padding: 20px;
+    }
+
+    .study-method-container {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .study-method-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .study-method-header h1 {
+      font-size: 28px;
+      color: var(--text);
+      margin: 0 0 10px 0;
+    }
+
+    .study-method-header p {
+      color: var(--muted);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .study-method-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .method-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .method-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+      transform: translateY(-4px);
+    }
+
+    .method-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .method-card input[type="radio"]:checked + .card-content {
+      color: var(--accent);
+    }
+
+    .method-card input[type="radio"]:checked {
+      display: block;
+    }
+
+    .method-card.selected {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .method-card.selected::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .method-card.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .card-content {
+      text-align: center;
+      transition: color 0.3s;
+    }
+
+    .card-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 8px 0;
+    }
+
+    .card-duration {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 8px 0;
+    }
+
+    .card-duration.free {
+      color: var(--success);
+    }
+
+    .card-description {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 8px 0 0 0;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(45, 58, 79, 0.8);
+    }
+
+    .user-info {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .user-info strong {
+      color: var(--accent);
+    }
+
+    .user-info .divider {
+      margin: 0 8px;
+      color: var(--muted);
+    }
+
+    .learning-type-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .learning-type-badge.book {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .learning-type-badge.computer {
+      background: #dbeafe;
+      color: #0c4a6e;
+    }
+
+    .change-type-link {
+      margin-left: 12px;
+      padding: 4px 10px;
+      background: var(--border);
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    .change-type-link:hover {
+      background: rgba(45, 58, 79, 0.8);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="study-method-page">
+    <div class="study-method-container">
+      <div class="user-info">
+        <strong>{{ session.get('user_id') }}</strong>님
+        <span class="divider">·</span>
+        <span class="learning-type-badge {% if learning_type == 'book' %}book{% else %}computer{% endif %}">
+          {{ learning_type_name }}
+        </span>
+        <a href="{{ url_for('select_learning_type') }}" class="change-type-link">변경</a>
+      </div>
+
+      <div class="study-method-header">
+        <h1>공부 방법 선택</h1>
+        <p>당신의 학습 스타일에 맞는 방법을 선택하세요</p>
+      </div>
+
+      <form method="POST">
+        <div class="study-method-grid">
+          {% for key, method in methods.items() %}
+          <label class="method-card" data-method="{{ key }}">
+            <input type="radio" name="method" value="{{ key }}" {% if key == 'pomodoro' %}checked{% endif %}>
+            <div class="card-content">
+              <p class="card-name">{{ method.name }}</p>
+              {% if method.duration %}
+              <p class="card-duration">{{ method.duration }}분</p>
+              <p class="card-description">{{ method.description }}</p>
+              {% else %}
+              <p class="card-duration free">∞</p>
+              <p class="card-description">{{ method.description }}</p>
+              {% endif %}
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn btn-primary">시작하기</button>
+          <a href="{{ url_for('logout') }}" class="btn btn-secondary">로그아웃</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const methodCards = document.querySelectorAll('.method-card');
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+
+    methodCards.forEach((card, index) => {
+      const radio = radioButtons[index];
+      
+      if (radio.checked) {
+        card.classList.add('selected');
+      }
+
+      card.addEventListener('click', () => {
+        methodCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        radio.checked = true;
+      });
+
+      radio.addEventListener('change', () => {
+        methodCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+    });
+  </script>
+{% endblock %}

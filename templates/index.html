@@ -3,6 +3,24 @@
 {% block content %}
 <h1 class="page-title">집중도 대시보드</h1>
 
+<div class="method-banner" data-method="{{ study_method }}">
+  <div class="method-info">
+    <span class="method-label">현재 공부법:</span>
+    <strong class="method-name">{{ method_info.name }}</strong>
+    {% if method_info.duration %}
+    <span class="method-duration">({{ method_info.duration }}분)</span>
+    {% else %}
+    <span class="method-duration">(무제한)</span>
+    {% endif %}
+    <span class="method-divider">·</span>
+    <span class="learning-type-badge" id="learning-type-badge">{{ session.get('learning_type', 'computer') }}</span>
+  </div>
+  <div class="method-actions">
+    <a href="{{ url_for('select_study_method') }}" class="method-change-btn">공부법 변경</a>
+    <a href="{{ url_for('select_learning_type') }}" class="method-change-btn">학습 매체 변경</a>
+  </div>
+</div>
+
 <section class="status-banner" id="status-banner" data-focused="true">
   <span class="status-banner__dot" id="status-dot"></span>
   <div>
@@ -10,6 +28,22 @@
     <p class="status-banner__text" id="focus-state">측정 중…</p>
   </div>
 </section>
+
+{% if learning_type == "book" %}
+<div class="camera-panel dashboard-camera-panel">
+  <div class="camera-viewport">
+    <img src="{{ url_for('api_camera_frame') }}" alt="카메라 스트림">
+  </div>
+  <div class="camera-meta">
+    <span>얼굴 방향: <strong id="face-direction-value">—</strong></span>
+    <span>시선 방향: <strong id="gaze-direction-value">—</strong></span>
+    <span>실시간 점수: <strong id="instant-focus-score">—</strong></span>
+  </div>
+</div>
+<p class="focus-formula" id="focus-formula-text">
+  집중점수(실시간) = 얼굴방향점수 × 0.6 + 시선방향점수 × 0.4
+</p>
+{% endif %}
 
 <div class="focus-bar-wrap">
   <div class="focus-bar" id="focus-bar" style="width: 0%"></div>
@@ -30,7 +64,7 @@
     <p class="card-value" id="distract-time">—</p>
   </section>
   <section class="card">
-    <p class="card-label">활성 창</p>
+    <p class="card-label">{% if learning_type == "book" %}카메라 판정{% else %}활성 창{% endif %}</p>
     <p class="card-value small" id="active-window">—</p>
   </section>
 </div>
@@ -41,6 +75,25 @@
   <span class="card-meta-sep">·</span>
   <span id="status-message">로딩 중…</span>
 </p>
+
+<div class="study-timer" id="study-timer">
+  <h2>측정 제어</h2>
+  <div class="timer-display">
+    <div class="timer-status" id="timer-status">시작 대기</div>
+
+    <div class="window-history">
+      <h3 class="window-history-title">{% if learning_type == "book" %}최근 카메라 판정{% else %}최근 탐지된 창{% endif %}</h3>
+      <ul id="window-history-list" class="window-history-list"></ul>
+    </div>
+  </div>
+
+  <div class="timer-controls">
+    <button id="monitor-start" class="btn btn-timer">측정 시작</button>
+    <button id="monitor-pause" class="btn btn-timer" disabled>일시정지</button>
+    <button id="monitor-reset" class="btn btn-timer">초기화</button>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
