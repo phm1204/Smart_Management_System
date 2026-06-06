@@ -1,11 +1,11 @@
 :root {
-  --bg: #0f1419;
-  --surface: #1a2332;
-  --border: #2d3a4f;
-  --text: #e7ecf3;
-  --muted: #8b9cb3;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
+  --bg: #15181f;
+  --surface: #20242d;
+  --border: #353b48;
+  --text: #e6e9ef;
+  --muted: #a4acba;
+  --accent: #4b73c4;
+  --accent-hover: #3f62ad;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -70,7 +70,7 @@ a:hover {
 }
 
 .user-display:hover {
-  background: rgba(59, 130, 246, 0.18);
+  background: rgba(75, 115, 196, 0.16);
 }
 
 .user-menu {
@@ -99,7 +99,7 @@ a:hover {
 }
 
 .user-dropdown a:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(75, 115, 196, 0.12);
 }
 
 .user-menu.open .user-dropdown {
@@ -178,6 +178,59 @@ a:hover {
 
 .dashboard-camera-panel {
   margin-bottom: 0.75rem;
+}
+
+.camera-guide-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1rem;
+}
+
+.camera-guide-overlay.hidden {
+  display: none;
+}
+
+.camera-guide-modal {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.2rem 1.2rem 1rem;
+  position: relative;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+.camera-guide-modal h3 {
+  margin: 0 0 0.6rem;
+  color: var(--text);
+}
+
+.camera-guide-modal p {
+  margin: 0.35rem 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.camera-guide-close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.55rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.camera-guide-close:hover {
+  color: var(--text);
 }
 
 .camera-viewport {
@@ -273,7 +326,7 @@ a:hover {
 
 .focus-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--success));
+  background: var(--accent);
   border-radius: 999px;
   transition: width 0.4s ease;
 }
@@ -288,8 +341,8 @@ a:hover {
   margin: 0 0 1rem;
   padding: 0.7rem 0.9rem;
   border-radius: 8px;
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(75, 115, 196, 0.25);
+  background: rgba(75, 115, 196, 0.06);
   color: var(--muted);
   font-size: 0.85rem;
 }
@@ -312,9 +365,9 @@ a:hover {
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
   background: var(--surface);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+  background: var(--surface);
 }
 
 .method-info {
@@ -352,8 +405,8 @@ a:hover {
 }
 
 .learning-type-badge[id="learning-type-badge"] {
-  background: #dbeafe;
-  color: #0c4a6e;
+  background: #2f3c52;
+  color: #c9d6ee;
 }
 
 .method-actions {
@@ -393,7 +446,7 @@ a:hover {
 
 .timer-display {
   background: var(--bg);
-  border: 2px solid var(--accent);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 2rem;
   margin-bottom: 1.5rem;
@@ -455,7 +508,7 @@ a:hover {
 
 .btn-timer {
   padding: 0.75rem 1.5rem;
-  background: var(--accent);
+  background: #3f4f69;
   color: white;
   border: none;
   border-radius: 6px;
@@ -466,7 +519,7 @@ a:hover {
 }
 
 .btn-timer:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: #4a5d7b;
 }
 
 .btn-timer:disabled {
@@ -477,6 +530,51 @@ a:hover {
 
 .btn-timer:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.card-title {
+  margin: 0 0 0.8rem;
+  font-size: 1.05rem;
+}
+
+.mypage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.form-label {
+  margin: 0 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-group label {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.record-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 20, 25, 0.45);
+  font-size: 0.9rem;
 }
 
 /* 반응형 */

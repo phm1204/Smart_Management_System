@@ -3,6 +3,7 @@ Smart Focus Management System — Flask GUI 진입점
 """
 import atexit
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request, redirect, url_for, session
@@ -11,7 +12,7 @@ from flask import Flask, Response, jsonify, render_template, request, redirect, 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.camera_focus_monitor import get_camera_monitor
-from src.detect_active_window import get_default_monitor
+from src.detect_active_window import SPECIAL_DISTRACT_OPTIONS, get_default_monitor
 
 app = Flask(__name__)
 app.secret_key = "smart_focus_secret_key_2026"
@@ -34,6 +35,45 @@ def _monitor_for_learning_type(learning_type: str):
 def _session_monitor():
     learning_type = session.get("learning_type", "computer")
     return _monitor_for_learning_type(learning_type)
+
+
+def _get_user_prefs():
+    return {
+        "messenger_mode": session.get("messenger_mode", "focus"),
+        "special_distract_options": session.get("special_distract_options", []),
+    }
+
+
+def _apply_focus_preferences():
+    prefs = _get_user_prefs()
+    monitor = get_default_monitor()
+    monitor.configure_preferences(
+        messenger_mode=prefs["messenger_mode"],
+        special_options=prefs["special_distract_options"],
+    )
+
+
+def _append_study_record(reason: str):
+    monitor = _session_monitor()
+    status = monitor.get_status()
+    total = int(status.get("focus_time_sec", 0)) + int(status.get("distract_time_sec", 0))
+    if total <= 0:
+        return
+
+    records = session.get("study_records", [])
+    records.insert(
+        0,
+        {
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "learning_type": session.get("learning_type", "computer"),
+            "study_method": session.get("study_method", "pomodoro"),
+            "focus_time_sec": int(status.get("focus_time_sec", 0)),
+            "distract_time_sec": int(status.get("distract_time_sec", 0)),
+            "focus_score": int(status.get("focus_score", 0)),
+            "reason": reason,
+        },
+    )
+    session["study_records"] = records[:30]
 
 
 @atexit.register
@@ -61,6 +101,7 @@ def index():
     study_method = session.get("study_method", "pomodoro")
     method_info = STUDY_METHODS.get(study_method, STUDY_METHODS["pomodoro"])
     learning_type = session.get("learning_type", "computer")
+    _apply_focus_preferences()
 
     return render_template(
         "index.html",
@@ -135,6 +176,34 @@ def camera():
     return render_template("camera.html", page_title="카메라 모니터", method_info=method_info, study_method=study_method)
 
 
+@app.route("/mypage", methods=["GET", "POST"])
+def mypage():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        messenger_mode = request.form.get("messenger_mode", "focus")
+        if messenger_mode not in ["focus", "distract"]:
+            messenger_mode = "focus"
+        selected_options = request.form.getlist("special_distract_options")
+        selected_options = [k for k in selected_options if k in SPECIAL_DISTRACT_OPTIONS]
+
+        session["messenger_mode"] = messenger_mode
+        session["special_distract_options"] = selected_options
+        _apply_focus_preferences()
+        return redirect(url_for("mypage"))
+
+    prefs = _get_user_prefs()
+    records = session.get("study_records", [])
+    return render_template(
+        "mypage.html",
+        page_title="내 페이지",
+        prefs=prefs,
+        records=records,
+        special_options=SPECIAL_DISTRACT_OPTIONS,
+    )
+
+
 @app.route("/logout")
 def logout():
     """로그아웃"""
@@ -150,6 +219,7 @@ def logout():
 def api_status():
     """학습 매체별 집중도 상태"""
     learning_type = session.get("learning_type", "computer")
+    _apply_focus_preferences()
     monitor = _monitor_for_learning_type(learning_type)
     status = monitor.get_status()
     status["learning_type"] = learning_type
@@ -169,6 +239,7 @@ def api_monitor_start():
 def api_monitor_pause():
     """집중도 측정 일시정지"""
     monitor = _session_monitor()
+    _append_study_record("일시정지")
     if hasattr(monitor, "pause"):
         monitor.pause()
     else:
@@ -180,6 +251,7 @@ def api_monitor_pause():
 def api_monitor_reset():
     """집중도 측정값 초기화"""
     monitor = _session_monitor()
+    _append_study_record("초기화")
     if hasattr(monitor, "pause"):
         monitor.pause()
     else:

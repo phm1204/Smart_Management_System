@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">내 페이지</h1>
+
+<section class="card">
+  <h2 class="card-title">집중 판정 설정</h2>
+  <form method="POST" class="mypage-form">
+    <div class="form-group">
+      <p class="form-label">메신저 판정 기준</p>
+      <label><input type="radio" name="messenger_mode" value="focus" {% if prefs.messenger_mode != "distract" %}checked{% endif %}> 집중으로 간주</label>
+      <label><input type="radio" name="messenger_mode" value="distract" {% if prefs.messenger_mode == "distract" %}checked{% endif %}> 비집중으로 간주</label>
+    </div>
+
+    <div class="form-group">
+      <p class="form-label">특수 비집중 목록 선택</p>
+      {% for key, option in special_options.items() %}
+      <label>
+        <input type="checkbox" name="special_distract_options" value="{{ key }}"
+          {% if key in prefs.special_distract_options %}checked{% endif %}>
+        {{ option.name }}
+      </label>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn-timer">설정 저장</button>
+  </form>
+</section>
+
+<section class="card" style="margin-top: 1rem;">
+  <h2 class="card-title">공부 기록</h2>
+  {% if records %}
+  <div class="record-list">
+    {% for item in records %}
+    <div class="record-item">
+      <strong>{{ item.time }}</strong>
+      <span>{{ item.learning_type }} · {{ item.study_method }} · {{ item.reason }}</span>
+      <span>집중 {{ item.focus_time_sec }}초 / 비집중 {{ item.distract_time_sec }}초 / 점수 {{ item.focus_score }}점</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="card-label">아직 저장된 공부 기록이 없습니다.</p>
+  {% endif %}
+</section>
+{% endblock %}
+

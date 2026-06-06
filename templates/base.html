@@ -17,6 +17,7 @@
             {{ session.get('user_id', '사용자') }}
           </button>
           <div class="user-dropdown" id="user-dropdown">
+            <a href="{{ url_for('mypage') }}">내 페이지</a>
             <a href="{{ url_for('camera') }}">카메라 연결</a>
             <a href="{{ url_for('logout') }}">로그아웃</a>
           </div>

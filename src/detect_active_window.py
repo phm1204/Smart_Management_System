@@ -8,23 +8,103 @@ from src.monitor_base import BaseMonitor
 DEFAULT_DISTRACT_KEYWORDS = [
     "instagram",
     "youtube",
+    "twitch",
+    "afreeca",
+    "soop",
     "netflix",
+    "disney+",
+    "disney plus",
+    "prime video",
     "tiktok",
     "facebook",
+    "twitter",
+    "x.com",
+    "reddit",
+    "9gag",
     "league of legends",
     "lol",
+    "valorant",
+    "overwatch",
+    "minecraft",
+    "roblox",
+    "steam",
+    "battle.net",
+    "battlenet",
+    "epic games",
+    "riot client",
+    "genshin",
+    "honkai",
     "game",
     "discord",
+]
+
+SPECIAL_DISTRACT_OPTIONS = {
+    "shopping": {
+        "name": "쇼핑몰",
+        "keywords": [
+            "shopping",
+            "shop",
+            "store",
+            "mall",
+            "쿠팡",
+            "11번가",
+            "지마켓",
+            "gmarket",
+            "옥션",
+            "auction",
+            "ssg",
+            "무신사",
+            "올리브영",
+            "oliveyoung",
+            "네이버 쇼핑",
+            "smartstore",
+            "오늘의집",
+            "aliexpress",
+            "amazon",
+            "temu",
+            "taobao",
+        ],
+    },
+}
+
+# 메신저는 업무/연락 목적일 수도 있어서 기본 비집중 목록에서 제외한다.
+MESSENGER_KEYWORDS = [
+    "discord",
+    "telegram",
+    "kakaotalk",
+    "카카오톡",
+    "whatsapp",
+    "slack",
+    "teams",
+]
+
+INSTAGRAM_FOCUS_KEYWORDS = [
+    "메시지",
+    "message",
+    "messages",
+    "direct",
+    "dm",
 ]
 
 
 class FocusMonitor(BaseMonitor):
     """활성 창 제목으로 집중/비집중 시간을 측정한다."""
 
-    def __init__(self, distract_keywords=None, interval_sec=1.0):
-        self.distract_keywords = list(
-            distract_keywords or DEFAULT_DISTRACT_KEYWORDS
-        )
+    def __init__(
+        self,
+        distract_keywords=None,
+        interval_sec=1.0,
+        include_messengers: bool = False,
+    ):
+        base = list(distract_keywords or DEFAULT_DISTRACT_KEYWORDS)
+        if include_messengers:
+            # 중복 제거하면서 추가
+            for w in MESSENGER_KEYWORDS:
+                if w not in base:
+                    base.append(w)
+        self.distract_keywords = base
+        self.include_messengers = include_messengers
+        self.selected_special_options = []
         self.interval_sec = interval_sec
         self._lock = threading.Lock()
         self._stop = threading.Event()
@@ -36,6 +116,34 @@ class FocusMonitor(BaseMonitor):
         self.focus_time_sec = 0
         self.distract_time_sec = 0
         self.last_title = ""
+
+    def configure_preferences(
+        self,
+        *,
+        messenger_mode: str = "focus",
+        special_options=None,
+    ):
+        """사용자 설정에 맞춰 비집중 키워드를 다시 구성한다."""
+        special_options = special_options or []
+        self.include_messengers = messenger_mode == "distract"
+        self.selected_special_options = list(special_options)
+
+        base = list(DEFAULT_DISTRACT_KEYWORDS)
+        if self.include_messengers:
+            for w in MESSENGER_KEYWORDS:
+                if w not in base:
+                    base.append(w)
+
+        for option_key in self.selected_special_options:
+            option = SPECIAL_DISTRACT_OPTIONS.get(option_key)
+            if not option:
+                continue
+            for w in option["keywords"]:
+                if w not in base:
+                    base.append(w)
+
+        with self._lock:
+            self.distract_keywords = base
 
     def is_running(self):
         return self._thread is not None and self._thread.is_alive()
@@ -86,9 +194,17 @@ class FocusMonitor(BaseMonitor):
                 "message": (
                     "집중 중" if self.focused else "집중 이탈 (비집중 앱 감지)"
                 ),
+                "messenger_mode": "distract" if self.include_messengers else "focus",
+                "selected_special_options": list(self.selected_special_options),
             }
 
     def _is_focused(self, title_lower):
+        # 인스타 메시지 창은 연락/업무 목적 가능성이 높아 집중으로 본다.
+        if "instagram" in title_lower:
+            for word in INSTAGRAM_FOCUS_KEYWORDS:
+                if word in title_lower:
+                    return True
+
         for word in self.distract_keywords:
             if word in title_lower:
                 return False

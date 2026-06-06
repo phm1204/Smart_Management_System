@@ -179,6 +179,16 @@ document.addEventListener("DOMContentLoaded", () => {
     resetBtn.addEventListener("click", () => controlMonitor("reset"));
   }
 
+  const guideOverlay = document.getElementById("camera-guide-overlay");
+  const guideCloseBtn = document.getElementById("camera-guide-close");
+  if (guideOverlay && guideCloseBtn) {
+    const closeGuide = () => guideOverlay.classList.add("hidden");
+    guideCloseBtn.addEventListener("click", closeGuide);
+    guideOverlay.addEventListener("click", (event) => {
+      if (event.target === guideOverlay) closeGuide();
+    });
+  }
+
   refreshStatus();
   setInterval(refreshStatus, 1000);
 });

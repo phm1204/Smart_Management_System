@@ -30,6 +30,15 @@
 </section>
 
 {% if learning_type == "book" %}
+<div class="camera-guide-overlay" id="camera-guide-overlay" role="dialog" aria-modal="true" aria-label="카메라 안내">
+  <div class="camera-guide-modal">
+    <button type="button" class="camera-guide-close" id="camera-guide-close" aria-label="닫기">×</button>
+    <h3>카메라 위치 안내</h3>
+    <p>사용 전 얼굴을 화면 중앙에 맞춰 주세요.</p>
+    <p>눈과 이마가 잘 보이도록 조명을 맞추면 탐지 정확도가 올라갑니다.</p>
+  </div>
+</div>
+
 <div class="camera-panel dashboard-camera-panel">
   <div class="camera-viewport">
     <img src="{{ url_for('api_camera_frame') }}" alt="카메라 스트림">
