@@ -1,23 +1,25 @@
 """
-Smart Focus Management System — Flask GUI 진입점
+Smart Focus Management System — Flask GUI 진입점 (PC)
 """
 import atexit
 import sys
 from datetime import datetime
 from pathlib import Path
 
+import requests
 from flask import Flask, Response, jsonify, render_template, request, redirect, url_for, session
 
-# src 패키지 import 경로
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.camera_focus_monitor import get_camera_monitor
+from src.computer_buzzer_watcher import get_computer_buzzer_watcher
 from src.detect_active_window import SPECIAL_DISTRACT_OPTIONS, get_default_monitor
+from src.device_config import use_pi_for_book
+from src.pi_client import PiClientError, merge_buzzer_status, pi_available, pi_get, pi_post, pi_stream
 
 app = Flask(__name__)
 app.secret_key = "smart_focus_secret_key_2026"
 
-# 공부법 정의
 STUDY_METHODS = {
     "pomodoro": {"name": "뽀모도로 기법", "duration": 25, "break_duration": 5, "description": "25분 공부 + 5분 휴식"},
     "short": {"name": "짧은 집중", "duration": 15, "break_duration": 3, "description": "15분 공부 + 3분 휴식"},
@@ -26,15 +28,22 @@ STUDY_METHODS = {
 }
 
 
+def _learning_type() -> str:
+    return session.get("learning_type", "computer")
+
+
+def _book_on_pi() -> bool:
+    return _learning_type() == "book" and use_pi_for_book()
+
+
 def _monitor_for_learning_type(learning_type: str):
-    if learning_type == "book":
+    if learning_type == "book" and not use_pi_for_book():
         return get_camera_monitor()
     return get_default_monitor()
 
 
 def _session_monitor():
-    learning_type = session.get("learning_type", "computer")
-    return _monitor_for_learning_type(learning_type)
+    return _monitor_for_learning_type(_learning_type())
 
 
 def _get_user_prefs():
@@ -53,9 +62,66 @@ def _apply_focus_preferences():
     )
 
 
-def _append_study_record(reason: str):
-    monitor = _session_monitor()
+def _local_monitor_status(monitor) -> dict:
     status = monitor.get_status()
+    status["learning_type"] = _learning_type()
+    return merge_buzzer_status(status)
+
+
+def _fetch_session_status() -> dict:
+    if _book_on_pi():
+        status = pi_get("/api/status")
+        status["learning_type"] = "book"
+        return status
+
+    _apply_focus_preferences()
+    monitor = _session_monitor()
+    return _local_monitor_status(monitor)
+
+
+def _control_session_monitor(action: str) -> dict:
+    if _book_on_pi():
+        if action == "pause":
+            _append_study_record("일시정지")
+        elif action == "reset":
+            _append_study_record("초기화")
+        return pi_post(f"/api/monitor/{action}")
+
+    monitor = _session_monitor()
+    if action == "start":
+        if not monitor.is_running():
+            monitor.start()
+    elif action == "pause":
+        _append_study_record("일시정지")
+        if hasattr(monitor, "pause"):
+            monitor.pause()
+        else:
+            monitor.stop()
+    elif action == "reset":
+        _append_study_record("초기화")
+        if hasattr(monitor, "pause"):
+            monitor.pause()
+        else:
+            monitor.stop()
+        monitor.reset()
+    return _local_monitor_status(monitor)
+
+
+def _reset_pi_monitor() -> None:
+    if not pi_available():
+        return
+    try:
+        pi_post("/api/monitor/reset")
+    except PiClientError:
+        pass
+
+
+def _append_study_record(reason: str):
+    try:
+        status = _fetch_session_status()
+    except PiClientError:
+        return
+
     total = int(status.get("focus_time_sec", 0)) + int(status.get("distract_time_sec", 0))
     if total <= 0:
         return
@@ -65,7 +131,7 @@ def _append_study_record(reason: str):
         0,
         {
             "time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "learning_type": session.get("learning_type", "computer"),
+            "learning_type": _learning_type(),
             "study_method": session.get("study_method", "pomodoro"),
             "focus_time_sec": int(status.get("focus_time_sec", 0)),
             "distract_time_sec": int(status.get("distract_time_sec", 0)),
@@ -88,19 +154,25 @@ def _stop_monitor():
         pass
 
 
-# ---------------------------------------------------------------------------
-# 페이지
-# ---------------------------------------------------------------------------
+def _computer_monitor_status() -> dict:
+    _apply_focus_preferences()
+    return get_default_monitor().get_status()
+
+
+get_computer_buzzer_watcher(
+    get_monitor_status=_computer_monitor_status,
+    is_computer_mode=lambda: True,
+)
+
 
 @app.route("/")
 def index():
-    """대시보드 — 집중도 요약 (로그인 필요)"""
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     study_method = session.get("study_method", "pomodoro")
     method_info = STUDY_METHODS.get(study_method, STUDY_METHODS["pomodoro"])
-    learning_type = session.get("learning_type", "computer")
+    learning_type = _learning_type()
     _apply_focus_preferences()
 
     return render_template(
@@ -109,27 +181,26 @@ def index():
         method_info=method_info,
         study_method=study_method,
         learning_type=learning_type,
+        pi_connected=pi_available(),
     )
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """로그인 페이지"""
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         if username:
             session["user_id"] = username
             return redirect(url_for("select_learning_type"))
-    
+
     return render_template("login.html")
 
 
 @app.route("/select-learning-type", methods=["GET", "POST"])
 def select_learning_type():
-    """학습 매체 선택 페이지 (책 또는 컴퓨터)"""
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
+
     if request.method == "POST":
         learning_type = request.form.get("learning_type", "computer")
         if learning_type in ["book", "computer"]:
@@ -138,42 +209,55 @@ def select_learning_type():
             get_default_monitor().reset()
             get_camera_monitor().stop()
             get_camera_monitor().reset()
+            _reset_pi_monitor()
             return redirect(url_for("select_study_method"))
-    
+
     return render_template("select_learning_type.html", page_title="학습 매체 선택")
 
 
 @app.route("/select-study-method", methods=["GET", "POST"])
 def select_study_method():
-    """공부법 선택 페이지"""
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
+
     if request.method == "POST":
         method = request.form.get("method", "pomodoro")
         if method in STUDY_METHODS:
             session["study_method"] = method
-            monitor = _session_monitor()
-            monitor.stop()
-            monitor.reset()
+            if _book_on_pi():
+                _reset_pi_monitor()
+            else:
+                monitor = _session_monitor()
+                monitor.stop()
+                monitor.reset()
             return redirect(url_for("index"))
-    
-    learning_type = session.get("learning_type", "computer")
+
+    learning_type = _learning_type()
     learning_type_name = "책" if learning_type == "book" else "컴퓨터"
-    
-    return render_template("study_method.html", page_title="공부법 선택", methods=STUDY_METHODS, learning_type=learning_type, learning_type_name=learning_type_name)
+
+    return render_template(
+        "study_method.html",
+        page_title="공부법 선택",
+        methods=STUDY_METHODS,
+        learning_type=learning_type,
+        learning_type_name=learning_type_name,
+    )
 
 
 @app.route("/camera")
 def camera():
-    """카메라 — 시선·얼굴 방향 모니터링 (로그인 필요)"""
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
+
     study_method = session.get("study_method", "pomodoro")
     method_info = STUDY_METHODS.get(study_method, STUDY_METHODS["pomodoro"])
-    
-    return render_template("camera.html", page_title="카메라 모니터", method_info=method_info, study_method=study_method)
+
+    return render_template(
+        "camera.html",
+        page_title="카메라 모니터",
+        method_info=method_info,
+        study_method=study_method,
+    )
 
 
 @app.route("/mypage", methods=["GET", "POST"])
@@ -206,63 +290,62 @@ def mypage():
 
 @app.route("/logout")
 def logout():
-    """로그아웃"""
     session.clear()
     return redirect(url_for("login"))
 
 
-# ---------------------------------------------------------------------------
-# API
-# ---------------------------------------------------------------------------
-
 @app.route("/api/status")
 def api_status():
-    """학습 매체별 집중도 상태"""
-    learning_type = session.get("learning_type", "computer")
-    _apply_focus_preferences()
-    monitor = _monitor_for_learning_type(learning_type)
-    status = monitor.get_status()
-    status["learning_type"] = learning_type
-    return jsonify(status)
+    try:
+        return jsonify(_fetch_session_status())
+    except PiClientError as exc:
+        return jsonify({"error": str(exc), "pi_connected": False}), 503
 
 
 @app.route("/api/monitor/start", methods=["POST"])
 def api_monitor_start():
-    """집중도 측정 시작"""
-    monitor = _session_monitor()
-    if not monitor.is_running():
-        monitor.start()
-    return jsonify(monitor.get_status())
+    try:
+        return jsonify(_control_session_monitor("start"))
+    except PiClientError as exc:
+        return jsonify({"error": str(exc)}), 503
 
 
 @app.route("/api/monitor/pause", methods=["POST"])
 def api_monitor_pause():
-    """집중도 측정 일시정지"""
-    monitor = _session_monitor()
-    _append_study_record("일시정지")
-    if hasattr(monitor, "pause"):
-        monitor.pause()
-    else:
-        monitor.stop()
-    return jsonify(monitor.get_status())
+    try:
+        return jsonify(_control_session_monitor("pause"))
+    except PiClientError as exc:
+        return jsonify({"error": str(exc)}), 503
 
 
 @app.route("/api/monitor/reset", methods=["POST"])
 def api_monitor_reset():
-    """집중도 측정값 초기화"""
-    monitor = _session_monitor()
-    _append_study_record("초기화")
-    if hasattr(monitor, "pause"):
-        monitor.pause()
-    else:
-        monitor.stop()
-    monitor.reset()
-    return jsonify(monitor.get_status())
+    try:
+        return jsonify(_control_session_monitor("reset"))
+    except PiClientError as exc:
+        return jsonify({"error": str(exc)}), 503
 
 
 @app.route("/api/camera/frame")
 def api_camera_frame():
-    """카메라 프레임 MJPEG 스트림"""
+    if _book_on_pi():
+        try:
+            upstream = pi_stream("/api/camera/frame")
+
+            def generate():
+                with upstream as response:
+                    response.raise_for_status()
+                    for chunk in response.iter_content(chunk_size=4096):
+                        if chunk:
+                            yield chunk
+
+            return Response(
+                generate(),
+                mimetype="multipart/x-mixed-replace; boundary=frame",
+            )
+        except (PiClientError, requests.RequestException) as exc:
+            return Response(f"Pi camera error: {exc}", status=503)
+
     monitor = get_camera_monitor()
     monitor.ensure_preview()
     return Response(

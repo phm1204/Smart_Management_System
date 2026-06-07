@@ -1,0 +1,17 @@
+[Unit]
+Description=Smart Focus Raspberry Pi Service (camera + buzzer)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Smart_Management_System
+EnvironmentFile=/home/pi/Smart_Management_System/.env
+ExecStart=/home/pi/Smart_Management_System/.venv/bin/python /home/pi/Smart_Management_System/pi_service.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

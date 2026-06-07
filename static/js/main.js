@@ -19,6 +19,7 @@ async function refreshStatus() {
     gazeDirection: document.getElementById("gaze-direction-value"),
     instantFocusScore: document.getElementById("instant-focus-score"),
     focusFormulaText: document.getElementById("focus-formula-text"),
+    buzzerBanner: document.getElementById("buzzer-banner"),
   };
 
   if (!els.focusScore) return;
@@ -116,6 +117,10 @@ async function refreshStatus() {
     }
     if (els.pauseBtn) {
       els.pauseBtn.disabled = !data.running;
+    }
+
+    if (els.buzzerBanner) {
+      els.buzzerBanner.classList.toggle("hidden", !data.buzzer_active);
     }
   } catch {
     if (els.statusMessage) {
