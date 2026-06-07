@@ -17,7 +17,7 @@ def pi_available() -> bool:
     return use_pi_for_book()
 
 
-def pi_get(path: str, timeout: float = 2.0) -> Dict[str, Any]:
+def pi_get(path: str, timeout: float = 4.0) -> Dict[str, Any]:
     url = f"{pi_base_url()}{path}"
     try:
         response = requests.get(url, timeout=timeout)
@@ -57,12 +57,14 @@ def send_buzzer_signal(host: Optional[str] = None, port: Optional[int] = None) -
 
 
 def merge_buzzer_status(status: Dict[str, Any]) -> Dict[str, Any]:
+    if "buzzer_active" in status:
+        return status
     if not pi_available():
         status.setdefault("buzzer_active", False)
         status.setdefault("buzzer_simulated", True)
         return status
     try:
-        buzzer = pi_get("/api/buzzer/status", timeout=1.0)
+        buzzer = pi_get("/api/buzzer/status", timeout=2.0)
         status.update(buzzer)
     except PiClientError:
         status.setdefault("buzzer_active", False)

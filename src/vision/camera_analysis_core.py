@@ -178,6 +178,7 @@ def analyze_camera_frame(
     config: CameraAnalysisConfig = CameraAnalysisConfig(),
     face_cascade: Optional[cv2.CascadeClassifier] = None,
     eye_cascade: Optional[cv2.CascadeClassifier] = None,
+    face_only: bool = False,
 ) -> Tuple[str, str, Optional[FaceBox]]:
     """얼굴 1회 검출 후 얼굴 방향·시선 방향을 함께 계산한다."""
     if frame_bgr is None or frame_bgr.size == 0:
@@ -191,9 +192,12 @@ def analyze_camera_frame(
     if box is None:
         return "NO FACE", "NO FACE", None
 
+    face_direction = _face_direction_from_box(box, gray.shape, config=config)
+    if face_only:
+        return face_direction, face_direction, box
+
     x, y, w, h = box
     face_gray = gray[y : y + h, x : x + w]
-    face_direction = _face_direction_from_box(box, gray.shape, config=config)
     gaze_direction = _gaze_direction_from_face(
         face_gray,
         config=config,

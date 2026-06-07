@@ -34,3 +34,31 @@ def buzzer_serial_baud() -> int:
 
 def pi_service_port() -> int:
     return int(os.environ.get("PI_SERVICE_PORT", "5001"))
+
+
+def camera_width() -> int:
+    return int(os.environ.get("CAMERA_WIDTH", "320"))
+
+
+def camera_height() -> int:
+    return int(os.environ.get("CAMERA_HEIGHT", "240"))
+
+
+def camera_jpeg_quality() -> int:
+    return int(os.environ.get("CAMERA_JPEG_QUALITY", "40"))
+
+
+def camera_stream_interval() -> float:
+    return float(os.environ.get("CAMERA_STREAM_INTERVAL", "0.25"))
+
+
+def camera_preview_interval() -> float:
+    return float(os.environ.get("CAMERA_PREVIEW_INTERVAL", "0.2"))
+
+
+def camera_analyze_interval() -> float:
+    return float(os.environ.get("CAMERA_ANALYZE_INTERVAL", "1.0"))
+
+
+def camera_face_only() -> bool:
+    return os.environ.get("CAMERA_FACE_ONLY", "1").lower() in {"1", "true", "yes"}

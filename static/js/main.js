@@ -1,7 +1,11 @@
 /**
  * 대시보드 — /api/status 실시간 폴링 + 측정 제어
  */
+let statusInFlight = false;
+
 async function refreshStatus() {
+  if (statusInFlight) return;
+  statusInFlight = true;
   const els = {
     focusScore: document.getElementById("focus-score"),
     focusTime: document.getElementById("focus-time"),
@@ -130,6 +134,8 @@ async function refreshStatus() {
       els.monitorRunning.textContent = "오류";
       els.monitorRunning.className = "badge badge--idle";
     }
+  } finally {
+    statusInFlight = false;
   }
 }
 
@@ -194,6 +200,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const learningType = document.getElementById("learning-type-badge")?.textContent?.trim();
+  const pollMs = learningType === "book" ? 3000 : 1000;
+
+  const poll = () => {
+    if (document.hidden) return;
+    refreshStatus();
+  };
+
   refreshStatus();
-  setInterval(refreshStatus, 1000);
+  setInterval(poll, pollMs);
 });

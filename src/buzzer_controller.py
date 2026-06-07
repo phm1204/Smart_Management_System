@@ -86,6 +86,9 @@ class BuzzerController:
             import serial
 
             self._serial = serial.Serial(self.serial_port, self.serial_baud, timeout=0.1)
+            # 아두이노는 시리얼 열릴 때 리셋됨 — 준비될 때까지 대기
+            time.sleep(2.0)
+            print(f"[Buzzer] 시리얼 연결됨: {self.serial_port}")
         except Exception as exc:
             print(f"[Buzzer] 시리얼 연결 실패 ({self.serial_port}): {exc}")
             self.simulate = True

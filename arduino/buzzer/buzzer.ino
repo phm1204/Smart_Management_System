@@ -36,7 +36,13 @@ void loop() {
     }
   }
 
-  digitalWrite(BUZZER_PIN, buzzing ? HIGH : LOW);
+  if (buzzing) {
+    tone(BUZZER_PIN, 2000);           // 피에조 부저
+    // digitalWrite(BUZZER_PIN, HIGH); // 능동 부저면 위 줄 대신 이 줄 사용
+  } else {
+    noTone(BUZZER_PIN);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
 
   if (buzzing && digitalRead(BUTTON_PIN) == LOW) {
     unsigned long now = millis();

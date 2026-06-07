@@ -50,7 +50,7 @@ def _distract_watcher_loop() -> None:
         else:
             _was_focused = True
 
-        time.sleep(0.5)
+        time.sleep(1.0)
 
 
 def _start_distract_watcher() -> None:
@@ -81,6 +81,15 @@ def api_status():
 @app.route("/api/buzzer/status")
 def api_buzzer_status():
     return jsonify(_buzzer.get_status())
+
+
+@app.route("/api/buzzer/test", methods=["POST"])
+def api_buzzer_test():
+    """부저 수동 테스트 — 아두이노/배선 확인용."""
+    triggered = _buzzer.trigger()
+    status = _buzzer.get_status()
+    status["triggered"] = triggered
+    return jsonify(status)
 
 
 @app.route("/api/monitor/start", methods=["POST"])

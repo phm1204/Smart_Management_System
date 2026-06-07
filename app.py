@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src.camera_focus_monitor import get_camera_monitor
 from src.computer_buzzer_watcher import get_computer_buzzer_watcher
 from src.detect_active_window import SPECIAL_DISTRACT_OPTIONS, get_default_monitor
-from src.device_config import use_pi_for_book
+from src.device_config import pi_base_url, use_pi_for_book
 from src.pi_client import PiClientError, merge_buzzer_status, pi_available, pi_get, pi_post, pi_stream
 
 app = Flask(__name__)
@@ -175,6 +175,10 @@ def index():
     learning_type = _learning_type()
     _apply_focus_preferences()
 
+    pi_camera_url = ""
+    if learning_type == "book" and use_pi_for_book():
+        pi_camera_url = f"{pi_base_url()}/api/camera/frame"
+
     return render_template(
         "index.html",
         page_title="대시보드",
@@ -182,6 +186,7 @@ def index():
         study_method=study_method,
         learning_type=learning_type,
         pi_connected=pi_available(),
+        pi_camera_url=pi_camera_url,
     )
 
 
