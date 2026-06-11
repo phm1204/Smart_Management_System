@@ -37,15 +37,19 @@ def pi_service_port() -> int:
 
 
 def camera_width() -> int:
-    return int(os.environ.get("CAMERA_WIDTH", "320"))
+    return int(os.environ.get("CAMERA_WIDTH", "640"))
 
 
 def camera_height() -> int:
-    return int(os.environ.get("CAMERA_HEIGHT", "240"))
+    return int(os.environ.get("CAMERA_HEIGHT", "480"))
+
+
+def camera_device_index() -> int:
+    return int(os.environ.get("CAMERA_DEVICE_INDEX", "0"))
 
 
 def camera_jpeg_quality() -> int:
-    return int(os.environ.get("CAMERA_JPEG_QUALITY", "40"))
+    return int(os.environ.get("CAMERA_JPEG_QUALITY", "55"))
 
 
 def camera_stream_interval() -> float:

@@ -23,7 +23,6 @@ async function refreshStatus() {
     gazeDirection: document.getElementById("gaze-direction-value"),
     instantFocusScore: document.getElementById("instant-focus-score"),
     focusFormulaText: document.getElementById("focus-formula-text"),
-    buzzerBanner: document.getElementById("buzzer-banner"),
   };
 
   if (!els.focusScore) return;
@@ -123,9 +122,6 @@ async function refreshStatus() {
       els.pauseBtn.disabled = !data.running;
     }
 
-    if (els.buzzerBanner) {
-      els.buzzerBanner.classList.toggle("hidden", !data.buzzer_active);
-    }
   } catch {
     if (els.statusMessage) {
       els.statusMessage.textContent = "서버 연결 실패";

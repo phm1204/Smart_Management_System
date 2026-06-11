@@ -12,9 +12,9 @@ FaceBox = Tuple[int, int, int, int]
 
 @dataclass(frozen=True)
 class CameraAnalysisConfig:
-    face_scale_factor: float = 1.08
-    face_min_neighbors: int = 5
-    face_min_size_ratio: float = 0.18  # 프레임 짧은 변 대비 최소 얼굴 크기
+    face_scale_factor: float = 1.05
+    face_min_neighbors: int = 4
+    face_min_size_ratio: float = 0.10  # 프레임 짧은 변 대비 최소 얼굴 크기
 
     eye_scale_factor: float = 1.08
     eye_min_neighbors: int = 8
@@ -56,7 +56,7 @@ def _detect_largest_face(
 ) -> Optional[FaceBox]:
     frame_h, frame_w = gray.shape[:2]
     min_dim = min(frame_h, frame_w)
-    min_size = max(80, int(min_dim * config.face_min_size_ratio))
+    min_size = max(24, int(min_dim * config.face_min_size_ratio))
 
     faces = face_cascade.detectMultiScale(
         gray,

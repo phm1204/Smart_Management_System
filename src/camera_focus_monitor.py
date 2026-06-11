@@ -8,6 +8,7 @@ import cv2
 
 from src.device_config import (
     camera_analyze_interval,
+    camera_device_index,
     camera_face_only,
     camera_height,
     camera_jpeg_quality,
@@ -159,12 +160,21 @@ class CameraFocusMonitor(BaseMonitor):
     def _ensure_camera(self) -> bool:
         if self._cap is not None and self._cap.isOpened():
             return True
-        self._cap = cv2.VideoCapture(0)
+        self._cap = cv2.VideoCapture(camera_device_index())
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width())
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height())
         self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self._cap.set(cv2.CAP_PROP_FPS, 15)
         return self._cap.isOpened()
+
+    def _prepare_analysis_frame(self, frame):
+        """얼굴 검출용 — 작은 해상도는 업스케일 후 분석."""
+        h, w = frame.shape[:2]
+        min_dim = min(h, w)
+        if min_dim >= 320:
+            return frame
+        scale = 320 / min_dim
+        return cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
 
     def _read_frame(self):
         if not self._ensure_camera():
@@ -310,10 +320,7 @@ class CameraFocusMonitor(BaseMonitor):
                     time.sleep(self._analyze_interval)
                     continue
 
-                analysis_frame = cv2.resize(
-                    frame,
-                    (max(120, camera_width() // 2), max(90, camera_height() // 2)),
-                )
+                analysis_frame = self._prepare_analysis_frame(frame)
                 raw_face, raw_gaze, _face_box = analyze_camera_frame(
                     analysis_frame,
                     face_only=self._face_only,
